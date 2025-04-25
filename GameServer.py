@@ -29,13 +29,22 @@ def GameThread():
     global posx 
     global posy 
 
+    # Load images for falling objects
+    tennis_ball = pygame.image.load('images/tennisball.png')
+    baseball = pygame.image.load('images/Baseball_Ball.png')
+    basketball = pygame.image.load('images/Basketball.png')
+    falling_images = [tennis_ball, baseball, basketball]  # List of images
+
+    # Scale images to a uniform size (e.g., 25x25)
+    falling_images = [pygame.transform.scale(img, (25, 25)) for img in falling_images]
+
     while True:
         # Initialize points counter
         points = 0
         font = pygame.font.Font(None, 36)  # Default font, size 36
 
-        # List to store falling squares
-        falling_squares = []
+        # List to store falling objects
+        falling_objects = []
 
         while True:
             for event in pygame.event.get():
@@ -43,26 +52,26 @@ def GameThread():
                     pygame.quit()
                     sys.exit()
 
-            # Add a new falling square only if there are fewer than 2 on the screen
-            if len(falling_squares) < 2 and random.randint(1, 50) == 1:  # Increase the range to make squares appear less frequently
+            # Add a new falling object only if there are fewer than 2 on the screen
+            if len(falling_objects) < 2 and random.randint(1, 50) == 1:  # Increase the range to make objects appear less frequently
                 square_x = random.randint(0, screen_width - 25)
-                square_color = random_color()
-                falling_squares.append({'rect': pygame.Rect(square_x, 0, 25, 25), 'color': square_color})
+                image = random.choice(falling_images)  # Randomly select an image
+                falling_objects.append({'rect': pygame.Rect(square_x, 0, 25, 25), 'image': image})
 
-            # Update positions of falling squares
-            for square in falling_squares:
-                square['rect'].y += 2 + points // 5  # Base speed is 2, increases by 1 every 5 points
+            # Update positions of falling objects
+            for obj in falling_objects:
+                obj['rect'].y += 2 + points // 5  # Base speed is 2, increases by 1 every 5 points
 
-            # Check for collisions between the circle and falling squares
+            # Check for collisions between the circle and falling objects
             circle_rect = pygame.Rect(posx - 24, posy - 24, 48, 48)  # Create a rectangle around the circle
-            for square in falling_squares:
-                if circle_rect.colliderect(square['rect']):
+            for obj in falling_objects:
+                if circle_rect.colliderect(obj['rect']):
                     points += 1  # Increment points
-                    falling_squares.remove(square)  # Remove the square upon collision
+                    falling_objects.remove(obj)  # Remove the object upon collision
 
-            # Remove squares that have reached the bottom and prompt for restart
-            for square in falling_squares[:]:
-                if square['rect'].y >= screen_height:
+            # Remove objects that have reached the bottom and prompt for restart
+            for obj in falling_objects[:]:
+                if obj['rect'].y >= screen_height:
                     # Display "Game Over" and restart prompt
                     screen.fill(background)
                     game_over_text = font.render("Game Over!", True, (255, 0, 0))  # Red text
@@ -91,8 +100,8 @@ def GameThread():
             pygame.draw.circle(screen, colorRect, (posx, posy), 24)  # Draw a circle with radius 12
 
             # Draw falling squares
-            for square in falling_squares:
-                pygame.draw.rect(screen, square['color'], square['rect'])
+            for square in falling_objects:
+                screen.blit(square['image'], square['rect'])
 
             # Render and display the points counter
             points_text = font.render(f"Points: {points}", True, (0, 0, 0))  # Black text
